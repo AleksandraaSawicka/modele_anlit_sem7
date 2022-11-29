@@ -1,6 +1,5 @@
 import math
 import numpy as np
-from scipy.integrate import quad
 import pyttsx3
 
 
@@ -35,17 +34,6 @@ def geometry(param, x, a):
     return x, a, da, db, dm, dn, theta_am, theta_an, theta_bm, theta_bn
 
 
-# def const_param():
-#     glebokosc = input("Podaj glebokosc: ")
-#     natezenie = input("Podaj nateznie: ")
-#     opornosc1 = input("Podaj opornosc 1: ")
-#     opornosc2 = input("Podaj opornosc 2: ")
-#     r_kuli = input("Podaj promien kuli: ")
-#     param = {'Glebokosc': glebokosc, 'Natezenie': natezenie,
-#              'Opornosc1': opornosc1, 'Opornosc2': opornosc2, 'Promien kuli': r_kuli}
-#     return param
-
-
 def legendre(number, f):
     pn = np.zeros(number)
     pn[0] = 1
@@ -56,7 +44,12 @@ def legendre(number, f):
 
 
 def coef_bn(param, number):
-    h, I, ro1, ro2, b = param
+    h = param.glebokosc
+    b = param.r_kuli
+    I = param.natezenie
+    ro1 = param.opornosc1
+    ro2 = param.opornosc2
+
     bn = np.zeros(number)
     for n in range(number):
         bn[n] = I*n/(2*math.pi) * b**(2*n+1)/d**(n+1) * ro1*(ro2-ro1)/(n*ro1+(n+1)*ro2)
@@ -64,23 +57,29 @@ def coef_bn(param, number):
 
 
 def potential(param, geom, number, f):
-    h, I, ro1, ro2, b = param.values()
+    h = param.glebokosc
+    b = param.r_kuli
+    I = param.natezenie
+    ro1 = param.opornosc1
+    ro2 = param.opornosc2
+    # h, I, ro1, ro2, b = param.values()
+
     x, a, da, db, dm, dn, theta_am, theta_an, theta_bm, theta_bn = geom
     pn = legendre(number, f)
-    bn = wspol_an(number, pn)
+    bn = coef_bn(param, number)
     v1 = 0
-    # Potencjał od elektrody A(+)
+    # Potencjał od elektrody A(+), dm!=da
     for n in range(pn.size):
-        if r < d:
-            v1 += (I*ro1/(2*math.pi) * r**n/d**(n+1) + bn*r**(-n-1))*pn
-        elif r > d:
-            v1 += (I*ro1/(2*math.pi) * d**n/r**(n+1) + bn*r**(-n-1))*pn
+        if dm < da:
+            v1 += (I*ro1/(2*math.pi) * dm**n/da**(n+1) + bn*dm**(-n-1))*pn
+        elif dm > da:
+            v1 += (I*ro1/(2*math.pi) * da**n/dm**(n+1) + bn*dm**(-n-1))*pn
     # Potencjał od elektrody B(-)
     for n in range(pn.size):
-        if r < d:
-            v1 += (-I*ro1/(2*math.pi) * r**n/db**(n+1) + bn*r**(-n-1))*pn
-        elif r > d:
-            v1 += (-I*ro1/(2*math.pi) * db**n/r**(n+1) + bn*r**(-n-1))*pn
+        if dm < db:
+            v1 += (-I*ro1/(2*math.pi) * dm**n/db**(n+1) + bn*dm**(-n-1))*pn
+        elif dm > db:
+            v1 += (-I*ro1/(2*math.pi) * db**n/dm**(n+1) + bn*dm**(-n-1))*pn
     return v1
 
 
@@ -105,3 +104,13 @@ print(param)
 
 x, a, dA, dB, dM, dN, cos_am, cos_an, cos_bm, cos_bn = geom = geometry(param, -30, 1)
 print(geom)
+
+# def const_param():
+#     glebokosc = input("Podaj glebokosc: ")
+#     natezenie = input("Podaj nateznie: ")
+#     opornosc1 = input("Podaj opornosc 1: ")
+#     opornosc2 = input("Podaj opornosc 2: ")
+#     r_kuli = input("Podaj promien kuli: ")
+#     param = {'Glebokosc': glebokosc, 'Natezenie': natezenie,
+#              'Opornosc1': opornosc1, 'Opornosc2': opornosc2, 'Promien kuli': r_kuli}
+#     return param
